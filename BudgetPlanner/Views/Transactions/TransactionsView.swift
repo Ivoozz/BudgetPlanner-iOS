@@ -28,7 +28,7 @@ public struct TransactionsView: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                Color(hex: "#090D16").ignoresSafeArea()
+                LiquidBackground()
 
                 VStack(spacing: 12) {
                     // Search Bar

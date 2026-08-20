@@ -2,7 +2,7 @@
   "name": "BudgetPlanner Community Source",
   "identifier": "nl.ivoozz.budgetplanner.source",
   "subtitle": "Slimme Financiële Cockpit & Budget App",
-  "description": "Native iOS Budget & Financiën app met realtime tweerichtingssync naar budget.ivoozz.nl, Liquid Glass interface en spaardoelen.",
+  "description": "Native iOS Budget & Financiën app met realtime tweerichtingssync naar budget.ivoozz.nl, Apple Liquid Glass UI, en spaardoelen.",
   "iconURL": "https://raw.githubusercontent.com/Ivoozz/BudgetPlanner-iOS/main/icon.png",
   "website": "https://budget.ivoozz.nl",
   "apps": [
@@ -13,20 +13,20 @@
       "subtitle": "Financiën & Budgetplanner",
       "version": "1.0.0",
       "versionDate": "2026-08-20",
-      "versionDescription": "Eerste officiële release van BudgetPlanner voor iPhone! Realtime synchronisatie met budget.ivoozz.nl, Liquid Glass styling, snelle uitgaveninvoer, rekeningoverzicht en spaardoelen.",
+      "versionDescription": "Officiële release van BudgetPlanner voor iPhone! Voorzien van het officiële Apple Liquid Glass design (translucency, specular highlights & ambient orbs), realtime 2-way sync met budget.ivoozz.nl, 2-seconden uitgaveninvoer en spaardoelen.",
       "downloadURL": "https://github.com/Ivoozz/BudgetPlanner-iOS/releases/download/v1.0.0/BudgetPlanner.ipa",
-      "localizedDescription": "De officiële native iPhone app voor budget.ivoozz.nl. Volledige realtime synchronisatie van al je transacties, rekeningen, vaste lasten, budgetten en spaardoelen met biometrische Face ID beveiliging en Liquid Glass design.",
+      "localizedDescription": "De officiële native iPhone app voor budget.ivoozz.nl. Volledige realtime synchronisatie van al je transacties, rekeningen, vaste lasten, budgetten en spaardoelen met biometrische Face ID beveiliging en het officiële Apple Liquid Glass design system.",
       "iconURL": "https://raw.githubusercontent.com/Ivoozz/BudgetPlanner-iOS/main/icon.png",
       "tintColor": "10B981",
-      "size": 350000,
+      "size": 3625459,
       "screenshotURLs": [],
       "versions": [
         {
           "version": "1.0.0",
           "date": "2026-08-20",
-          "localizedDescription": "Eerste officiële release van BudgetPlanner voor iPhone! Realtime synchronisatie met budget.ivoozz.nl, Liquid Glass styling, snelle uitgaveninvoer, rekeningoverzicht en spaardoelen.",
+          "localizedDescription": "Officiële release van BudgetPlanner voor iPhone! Voorzien van het officiële Apple Liquid Glass design (translucency, specular highlights & ambient orbs), realtime 2-way sync met budget.ivoozz.nl, 2-seconden uitgaveninvoer en spaardoelen.",
           "downloadURL": "https://github.com/Ivoozz/BudgetPlanner-iOS/releases/download/v1.0.0/BudgetPlanner.ipa",
-          "size": 350000
+          "size": 3625459
         }
       ]
     }

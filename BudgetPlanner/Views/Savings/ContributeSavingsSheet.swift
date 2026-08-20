@@ -17,7 +17,7 @@ public struct ContributeSavingsSheet: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                Color(hex: "#090D16").ignoresSafeArea()
+                LiquidBackground()
 
                 VStack(spacing: 24) {
                     VStack(spacing: 8) {

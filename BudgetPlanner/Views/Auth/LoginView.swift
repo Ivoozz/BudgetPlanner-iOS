@@ -16,18 +16,7 @@ public struct LoginView: View {
 
     public var body: some View {
         ZStack {
-            // Background ambient gradients
-            Color(hex: "#090D16").ignoresSafeArea()
-
-            Circle()
-                .fill(Color.appEmerald.opacity(0.15))
-                .blur(radius: 80)
-                .offset(x: -120, y: -200)
-
-            Circle()
-                .fill(Color.appSapphire.opacity(0.2))
-                .blur(radius: 90)
-                .offset(x: 120, y: 220)
+            LiquidBackground()
 
             ScrollView {
                 VStack(spacing: 28) {

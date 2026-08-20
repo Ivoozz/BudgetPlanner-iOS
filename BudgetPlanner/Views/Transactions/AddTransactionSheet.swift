@@ -34,7 +34,7 @@ public struct AddTransactionSheet: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                Color(hex: "#090D16").ignoresSafeArea()
+                LiquidBackground()
 
                 ScrollView {
                     VStack(spacing: 20) {
