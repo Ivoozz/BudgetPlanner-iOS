@@ -222,7 +222,7 @@ public struct SettingsView: View {
                             .foregroundColor(.white)
                     }
                 }
-                .onChange(of: biometricsToggle) { val in
+                .onChange(of: biometricsToggle) { _, val in
                     auth.setBiometricsEnabled(val)
                 }
 

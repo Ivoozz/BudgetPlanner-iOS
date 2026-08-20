@@ -10,7 +10,7 @@ public struct TransactionRowView: View {
     }
 
     private var isIncome: Bool {
-        transaction.type == .income || transaction.type == .oneTimeIncome
+        transaction.type == .income
     }
 
     private var isTransfer: Bool {

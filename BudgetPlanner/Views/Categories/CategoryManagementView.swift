@@ -62,7 +62,7 @@ public struct CategoryManagementView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
 
-                Text(cat.type == "expense" ? "Uitgave" : (cat.type == "income" ? "Inkomen" : cat.type))
+                Text(cat.type.displayName)
                     .font(.system(size: 11))
                     .foregroundColor(.gray)
             }
@@ -105,7 +105,7 @@ public struct AddCategorySheet: View {
     public var editingCategory: Category?
 
     @State private var name: String = ""
-    @State private var type: String = "expense"
+    @State private var selectedType: CategoryType = .variableExpense
     @State private var selectedColor: String = "#10B981"
     @State private var selectedIcon: String = "tag.fill"
     @State private var isSaving: Bool = false
@@ -136,9 +136,10 @@ public struct AddCategorySheet: View {
                         TextField("Categorienaam (bijv. Boodschappen)", text: $name)
                             .foregroundColor(.white)
 
-                        Picker("Type", selection: $type) {
-                            Text("Uitgaven").tag("expense")
-                            Text("Inkomsten").tag("income")
+                        Picker("Type", selection: $selectedType) {
+                            ForEach(CategoryType.allCases) { type in
+                                Text(type.displayName).tag(type)
+                            }
                         }
                     }
                     .listRowBackground(Color.white.opacity(0.06))
@@ -216,7 +217,7 @@ public struct AddCategorySheet: View {
             .onAppear {
                 if let cat = editingCategory {
                     name = cat.name
-                    type = cat.type
+                    selectedType = cat.type
                     selectedColor = cat.color
                     selectedIcon = cat.icon
                 }
@@ -231,9 +232,9 @@ public struct AddCategorySheet: View {
         Task {
             do {
                 if let cat = editingCategory {
-                    try await store.updateCategory(id: cat.id, name: name, type: type, icon: selectedIcon, color: selectedColor)
+                    try await store.updateCategory(id: cat.id, name: name, type: selectedType.rawValue, icon: selectedIcon, color: selectedColor)
                 } else {
-                    try await store.addCategory(name: name, type: type, icon: selectedIcon, color: selectedColor)
+                    try await store.addCategory(name: name, type: selectedType.rawValue, icon: selectedIcon, color: selectedColor)
                 }
                 dismiss()
             } catch {

@@ -12,7 +12,7 @@ public struct TransactionDetailView: View {
     }
 
     private var isIncome: Bool {
-        transaction.type == .income || transaction.type == .oneTimeIncome
+        transaction.type == .income
     }
 
     public var body: some View {
