@@ -6,22 +6,22 @@ import SwiftUI
 public struct LiquidGlassModifier: ViewModifier {
     public var cornerRadius: CGFloat
     public var borderOpacity: Double
+    public var strokeColor: Color
     public var glowColor: Color
     public var glowRadius: CGFloat
-    public var interactive: Bool
 
     public init(
         cornerRadius: CGFloat = 22,
         borderOpacity: Double = 0.35,
+        strokeColor: Color = Color.white.opacity(0.15),
         glowColor: Color = Color.appEmerald.opacity(0.15),
-        glowRadius: CGFloat = 14,
-        interactive: Bool = false
+        glowRadius: CGFloat = 14
     ) {
         self.cornerRadius = cornerRadius
         self.borderOpacity = borderOpacity
+        self.strokeColor = strokeColor
         self.glowColor = glowColor
         self.glowRadius = glowRadius
-        self.interactive = interactive
     }
 
     public func body(content: Content) -> some View {
@@ -48,10 +48,10 @@ public struct LiquidGlassModifier: ViewModifier {
                         LinearGradient(
                             colors: [
                                 Color.white.opacity(borderOpacity),
-                                Color.white.opacity(borderOpacity * 0.3),
+                                strokeColor,
                                 Color.clear,
                                 Color.white.opacity(borderOpacity * 0.15),
-                                Color.white.opacity(borderOpacity * 0.4)
+                                strokeColor
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -205,12 +205,14 @@ public extension View {
     func liquidGlass(
         cornerRadius: CGFloat = 22,
         borderOpacity: Double = 0.35,
+        strokeColor: Color = Color.white.opacity(0.15),
         glowColor: Color = Color.appEmerald.opacity(0.12),
         glowRadius: CGFloat = 14
     ) -> some View {
         self.modifier(LiquidGlassModifier(
             cornerRadius: cornerRadius,
             borderOpacity: borderOpacity,
+            strokeColor: strokeColor,
             glowColor: glowColor,
             glowRadius: glowRadius
         ))
