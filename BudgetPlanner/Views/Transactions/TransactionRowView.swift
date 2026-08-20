@@ -3,10 +3,14 @@ import SwiftUI
 public struct TransactionRowView: View {
     public let transaction: Transaction
     @ObservedObject var store = BudgetStore.shared
-    @State private var showingDetail = false
+    @State private var showingDetail: Bool = false
+
+    public init(transaction: Transaction) {
+        self.transaction = transaction
+    }
 
     private var isIncome: Bool {
-        transaction.type == .income
+        transaction.type == .income || transaction.type == .oneTimeIncome
     }
 
     private var isTransfer: Bool {
@@ -15,9 +19,9 @@ public struct TransactionRowView: View {
 
     private var formattedAmount: String {
         if isTransfer {
-            return CurrencyFormatter.format(transaction.amount)
+            return CurrencyFormatter.format(transaction.amount, privacy: store.privacyMode)
         }
-        return CurrencyFormatter.formatSigned(transaction.amount, isIncome: isIncome)
+        return CurrencyFormatter.formatSigned(transaction.amount, isIncome: isIncome, privacy: store.privacyMode)
     }
 
     private var amountColor: Color {
@@ -44,17 +48,17 @@ public struct TransactionRowView: View {
                 CategoryIconView(
                     icon: transaction.category?.icon ?? (isTransfer ? "arrow.left.arrow.right" : "tag.fill"),
                     colorHex: transaction.category?.color ?? (isTransfer ? "#3B82F6" : "#64748B"),
-                    size: 40,
-                    iconSize: 18
+                    size: 38,
+                    iconSize: 17
                 )
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(titleText)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
                         .lineLimit(1)
 
-                    HStack(spacing: 6) {
+                    HStack(spacing: 4) {
                         Text(transaction.date)
                             .font(.system(size: 11))
                             .foregroundColor(.gray)
@@ -75,7 +79,7 @@ public struct TransactionRowView: View {
 
                 VStack(alignment: .trailing, spacing: 3) {
                     Text(formattedAmount)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundColor(amountColor)
 
                     if let cat = transaction.category {

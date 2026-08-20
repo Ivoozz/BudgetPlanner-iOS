@@ -20,15 +20,18 @@ public struct CurrencyFormatter {
         return nf
     }()
 
-    public static func format(_ amount: Double) -> String {
-        formatter.string(from: NSNumber(value: amount)) ?? String(format: "€ %.2f", amount)
+    public static func format(_ amount: Double, privacy: Bool = false) -> String {
+        if privacy { return "€ •••••" }
+        return formatter.string(from: NSNumber(value: amount)) ?? String(format: "€ %.2f", amount)
     }
 
-    public static func formatCompact(_ amount: Double) -> String {
-        compactFormatter.string(from: NSNumber(value: amount)) ?? String(format: "€ %.0f", amount)
+    public static func formatCompact(_ amount: Double, privacy: Bool = false) -> String {
+        if privacy { return "€ •••" }
+        return compactFormatter.string(from: NSNumber(value: amount)) ?? String(format: "€ %.0f", amount)
     }
 
-    public static func formatSigned(_ amount: Double, isIncome: Bool) -> String {
+    public static func formatSigned(_ amount: Double, isIncome: Bool, privacy: Bool = false) -> String {
+        if privacy { return "€ •••••" }
         let formatted = format(abs(amount))
         return isIncome ? "+\(formatted)" : "-\(formatted)"
     }

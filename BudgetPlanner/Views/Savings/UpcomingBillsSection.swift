@@ -55,7 +55,7 @@ public struct UpcomingBillsSection: View {
                             Spacer()
 
                             VStack(alignment: .trailing, spacing: 3) {
-                                Text(CurrencyFormatter.format(bill.amount))
+                                Text(CurrencyFormatter.format(bill.amount, privacy: store.privacyMode))
                                     .font(.system(size: 14, weight: .bold, design: .rounded))
                                     .foregroundColor(.appRose)
 

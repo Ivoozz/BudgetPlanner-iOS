@@ -130,6 +130,14 @@ public class APIService {
         return try await execute(req)
     }
 
+    public func changePassword(oldPassword: String, newPassword: String) async throws -> String {
+        let payload = ["old_password": oldPassword, "new_password": newPassword]
+        let body = try jsonEncoder.encode(payload)
+        let req = try createRequest(path: "/api/auth/change-password", method: "POST", body: body)
+        let res: [String: String] = try await execute(req)
+        return res["message"] ?? "Wachtwoord succesvol gewijzigd."
+    }
+
     // MARK: - Accounts
     public func getAccounts(includeArchived: Bool = false) async throws -> [Account] {
         let q = [URLQueryItem(name: "include_archived", value: String(includeArchived))]
@@ -152,12 +160,13 @@ public class APIService {
         return try await execute(req)
     }
 
-    public func updateAccount(id: Int, name: String, icon: String, color: String) async throws -> Account {
-        let payload: [String: Any] = [
+    public func updateAccount(id: Int, name: String, type: String? = nil, icon: String, color: String) async throws -> Account {
+        var payload: [String: Any] = [
             "name": name,
             "icon": icon,
             "color": color
         ]
+        if let t = type { payload["type"] = t }
         let body = try JSONSerialization.data(withJSONObject: payload)
         let req = try createRequest(path: "/api/accounts/\(id)", method: "PUT", body: body)
         return try await execute(req)
@@ -332,6 +341,12 @@ public class APIService {
         return try await execute(req)
     }
 
+    public func updateSavingsGoal(id: Int, payload: [String: Any]) async throws -> SavingsGoal {
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        let req = try createRequest(path: "/api/savings-goals/\(id)", method: "PUT", body: body)
+        return try await execute(req)
+    }
+
     public func contributeSavingsGoal(id: Int, amount: Double) async throws -> SavingsGoal {
         let q = [URLQueryItem(name: "amount", value: "\(amount)")]
         let req = try createRequest(path: "/api/savings-goals/\(id)/contribute", method: "POST", queryItems: q)
@@ -347,6 +362,48 @@ public class APIService {
     public func getRecurringRules() async throws -> [RecurringRule] {
         let req = try createRequest(path: "/api/recurring")
         return try await execute(req)
+    }
+
+    public func createRecurringRule(
+        name: String,
+        amount: Double,
+        type: String,
+        frequency: String,
+        dayOfMonth: Int,
+        categoryId: Int?,
+        accountId: Int?,
+        payee: String = "",
+        startDate: String,
+        notes: String = ""
+    ) async throws -> RecurringRule {
+        var payload: [String: Any] = [
+            "name": name,
+            "amount": amount,
+            "type": type,
+            "frequency": frequency,
+            "day_of_month": dayOfMonth,
+            "payee": payee,
+            "start_date": startDate,
+            "notes": notes,
+            "is_active": true
+        ]
+        if let cid = categoryId { payload["category_id"] = cid }
+        if let aid = accountId { payload["account_id"] = aid }
+
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        let req = try createRequest(path: "/api/recurring", method: "POST", body: body)
+        return try await execute(req)
+    }
+
+    public func updateRecurringRule(id: Int, payload: [String: Any]) async throws -> RecurringRule {
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        let req = try createRequest(path: "/api/recurring/\(id)", method: "PUT", body: body)
+        return try await execute(req)
+    }
+
+    public func deleteRecurringRule(id: Int) async throws {
+        let req = try createRequest(path: "/api/recurring/\(id)", method: "DELETE")
+        let _: [String: String] = try await execute(req)
     }
 
     public func generateRecurringTransaction(ruleId: Int, year: Int, month: Int) async throws -> [String: Any] {
@@ -388,5 +445,18 @@ public class APIService {
         let q = [URLQueryItem(name: "year", value: "\(year)")]
         let req = try createRequest(path: "/api/stats/cashflow", queryItems: q)
         return try await execute(req)
+    }
+
+    // MARK: - System Tools
+    public func seedDemoData() async throws -> String {
+        let req = try createRequest(path: "/api/system/seed-demo", method: "POST")
+        let res: [String: String] = try await execute(req)
+        return res["message"] ?? "Voorbeelddata succesvol geladen!"
+    }
+
+    public func resetDatabase() async throws -> String {
+        let req = try createRequest(path: "/api/system/reset", method: "POST")
+        let res: [String: String] = try await execute(req)
+        return res["message"] ?? "Database geschoond."
     }
 }

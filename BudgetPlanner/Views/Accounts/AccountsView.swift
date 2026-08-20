@@ -2,8 +2,8 @@ import SwiftUI
 
 public struct AccountsView: View {
     @ObservedObject var store = BudgetStore.shared
-    @State private var showingAddAccount = false
-    @State private var showingTransfer = false
+    @State private var showingAddAccount: Bool = false
+    @State private var showingTransfer: Bool = false
 
     public init() {}
 
@@ -14,6 +14,9 @@ public struct AccountsView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
+                        // Month & Privacy Bar
+                        MonthNavigationBar()
+
                         // Total Balance Hero Card
                         VStack(spacing: 12) {
                             Text("TOTAAL VERMOGEN OP REKENINGEN")
@@ -21,7 +24,7 @@ public struct AccountsView: View {
                                 .foregroundColor(.gray)
                                 .tracking(1.1)
 
-                            Text(CurrencyFormatter.format(store.totalBalance))
+                            Text(CurrencyFormatter.format(store.totalBalance, privacy: store.privacyMode))
                                 .font(.system(size: 32, weight: .heavy, design: .rounded))
                                 .foregroundColor(.white)
 
@@ -59,7 +62,7 @@ public struct AccountsView: View {
 
                         // Accounts List
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("ALLE REKENINGEN")
+                            Text("ALLE REKENINGEN (\(store.accounts.count))")
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundColor(.gray)
                                 .tracking(1.1)
@@ -80,7 +83,7 @@ public struct AccountsView: View {
 
                                         VStack(alignment: .leading, spacing: 3) {
                                             Text(acc.name)
-                                                .font(.system(size: 16, weight: .semibold))
+                                                .font(.system(size: 15, weight: .semibold))
                                                 .foregroundColor(.white)
 
                                             Text(acc.type.displayName)
@@ -90,8 +93,8 @@ public struct AccountsView: View {
 
                                         Spacer()
 
-                                        Text(CurrencyFormatter.format(acc.balance))
-                                            .font(.system(size: 17, weight: .bold, design: .rounded))
+                                        Text(CurrencyFormatter.format(acc.balance, privacy: store.privacyMode))
+                                            .font(.system(size: 16, weight: .bold, design: .rounded))
                                             .foregroundColor(.white)
                                     }
                                     .padding(14)

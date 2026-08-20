@@ -3,6 +3,7 @@ import SwiftUI
 public struct BudgetsView: View {
     @ObservedObject var store = BudgetStore.shared
     @State private var selectedItemForEdit: CategoryBreakdownItem? = nil
+    @State private var showingEditSheet: Bool = false
 
     public init() {}
 
@@ -20,17 +21,20 @@ public struct BudgetsView: View {
                 LiquidBackground()
 
                 ScrollView {
-                    VStack(spacing: 20) {
+                    VStack(spacing: 18) {
+                        // Month & Privacy Bar
+                        MonthNavigationBar()
+
                         // Overview Card
                         VStack(spacing: 14) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("TOTAAL GEBUDGETTEERD")
-                                        .font(.system(size: 11, weight: .bold))
+                                        .font(.system(size: 10, weight: .bold))
                                         .foregroundColor(.gray)
 
-                                    Text(CurrencyFormatter.format(totalBudgeted))
-                                        .font(.system(size: 26, weight: .heavy, design: .rounded))
+                                    Text(CurrencyFormatter.format(totalBudgeted, privacy: store.privacyMode))
+                                        .font(.system(size: 24, weight: .heavy, design: .rounded))
                                         .foregroundColor(.white)
                                 }
 
@@ -38,10 +42,10 @@ public struct BudgetsView: View {
 
                                 VStack(alignment: .trailing, spacing: 4) {
                                     Text("TOTAAL UITGEGEVEN")
-                                        .font(.system(size: 11, weight: .bold))
+                                        .font(.system(size: 10, weight: .bold))
                                         .foregroundColor(.gray)
 
-                                    Text(CurrencyFormatter.format(totalSpent))
+                                    Text(CurrencyFormatter.format(totalSpent, privacy: store.privacyMode))
                                         .font(.system(size: 20, weight: .bold, design: .rounded))
                                         .foregroundColor(totalSpent > totalBudgeted && totalBudgeted > 0 ? .appRose : .appEmerald)
                                 }
@@ -52,11 +56,27 @@ public struct BudgetsView: View {
 
                         // Category List
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("CATEGORIEËN & LIMIETEN")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.gray)
-                                .tracking(1.1)
-                                .padding(.horizontal, 4)
+                            HStack {
+                                Text("CATEGORIEËN & LIMIETEN")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.gray)
+                                    .tracking(1.1)
+
+                                Spacer()
+
+                                Button(action: {
+                                    selectedItemForEdit = nil
+                                    showingEditSheet = true
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "plus.circle.fill")
+                                        Text("Budget Toevoegen")
+                                    }
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.appEmerald)
+                                }
+                            }
+                            .padding(.horizontal, 4)
 
                             if store.categoryBreakdown.isEmpty {
                                 HStack {
@@ -69,10 +89,11 @@ public struct BudgetsView: View {
                                 }
                                 .liquidGlass(cornerRadius: 16)
                             } else {
-                                VStack(spacing: 10) {
+                                LazyVStack(spacing: 10) {
                                     ForEach(store.categoryBreakdown) { item in
                                         BudgetRowView(item: item) {
                                             selectedItemForEdit = item
+                                            showingEditSheet = true
                                         }
                                     }
                                 }
@@ -89,8 +110,8 @@ public struct BudgetsView: View {
                 }
             }
             .navigationTitle("Budgetten")
-            .sheet(item: $selectedItemForEdit) { item in
-                EditBudgetSheet(categoryItem: item)
+            .sheet(isPresented: $showingEditSheet) {
+                EditBudgetSheet(item: selectedItemForEdit)
             }
         }
     }

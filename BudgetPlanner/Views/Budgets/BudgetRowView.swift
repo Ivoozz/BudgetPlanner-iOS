@@ -2,7 +2,13 @@ import SwiftUI
 
 public struct BudgetRowView: View {
     public let item: CategoryBreakdownItem
+    @ObservedObject var store = BudgetStore.shared
     public var onEdit: (() -> Void)? = nil
+
+    public init(item: CategoryBreakdownItem, onEdit: (() -> Void)? = nil) {
+        self.item = item
+        self.onEdit = onEdit
+    }
 
     private var percentage: Double {
         item.budgetUsedPercentage ?? 0.0
@@ -21,20 +27,20 @@ public struct BudgetRowView: View {
         }) {
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    CategoryIconView(icon: item.categoryIcon, colorHex: item.categoryColor, size: 42, iconSize: 20)
+                    CategoryIconView(icon: item.categoryIcon, colorHex: item.categoryColor, size: 40, iconSize: 18)
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(item.categoryName)
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.white)
 
                         HStack(spacing: 4) {
-                            Text("Besteed: \(CurrencyFormatter.format(item.totalAmount))")
+                            Text("Besteed: \(CurrencyFormatter.format(item.totalAmount, privacy: store.privacyMode))")
                                 .font(.system(size: 11))
                                 .foregroundColor(.gray)
 
                             if let b = item.budgetAmount {
-                                Text("van \(CurrencyFormatter.format(b))")
+                                Text("van \(CurrencyFormatter.format(b, privacy: store.privacyMode))")
                                     .font(.system(size: 11))
                                     .foregroundColor(.gray)
                             }
@@ -45,8 +51,8 @@ public struct BudgetRowView: View {
 
                     VStack(alignment: .trailing, spacing: 3) {
                         if let pct = item.budgetUsedPercentage {
-                            Text("\(String(format: "%.0f", pct))%")
-                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                            Text(store.privacyMode ? "••%" : "\(String(format: "%.0f", pct))%")
+                                .font(.system(size: 14, weight: .bold, design: .rounded))
                                 .foregroundColor(barColor)
                         } else {
                             Text("Geen limiet")
@@ -55,7 +61,7 @@ public struct BudgetRowView: View {
                         }
 
                         if let rem = item.remainingBudget {
-                            Text(rem >= 0 ? "Nog \(CurrencyFormatter.format(rem))" : "+\(CurrencyFormatter.format(abs(rem))) over!")
+                            Text(rem >= 0 ? "Nog \(CurrencyFormatter.format(rem, privacy: store.privacyMode))" : "+\(CurrencyFormatter.format(abs(rem), privacy: store.privacyMode)) over!")
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(rem >= 0 ? .gray : .appRose)
                         }
@@ -68,18 +74,18 @@ public struct BudgetRowView: View {
                         ZStack(alignment: .leading) {
                             Capsule()
                                 .fill(Color.white.opacity(0.08))
-                                .frame(height: 7)
+                                .frame(height: 6)
 
                             Capsule()
                                 .fill(barColor)
-                                .frame(width: min(geo.size.width * CGFloat(percentage / 100.0), geo.size.width), height: 7)
+                                .frame(width: min(geo.size.width * CGFloat(percentage / 100.0), geo.size.width), height: 6)
                         }
                     }
-                    .frame(height: 7)
+                    .frame(height: 6)
                 }
             }
             .padding(14)
-            .liquidGlass(cornerRadius: 16, strokeColor: item.budgetAmount != nil ? barColor.opacity(0.2) : Color.white.opacity(0.1))
+            .liquidGlass(cornerRadius: 16, strokeColor: item.budgetAmount != nil ? barColor.opacity(0.25) : Color.white.opacity(0.1))
         }
         .buttonStyle(PlainButtonStyle())
     }

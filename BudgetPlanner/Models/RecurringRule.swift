@@ -54,6 +54,27 @@ public struct RecurringRule: Identifiable, Codable, Hashable {
         self.isActive = isActive
         self.notes = notes
     }
+
+    public var monthlyEquivalent: Double {
+        switch frequency {
+        case "weekly": return amount * 4.333
+        case "quarterly": return amount / 3.0
+        case "semi_annually": return amount / 6.0
+        case "annually": return amount / 12.0
+        default: return amount
+        }
+    }
+
+    public var frequencyLabel: String {
+        switch frequency {
+        case "weekly": return "Wekelijks"
+        case "monthly": return "Maandelijks"
+        case "quarterly": return "Per kwartaal"
+        case "semi_annually": return "Halfjaarlijks"
+        case "annually": return "Jaarlijks"
+        default: return frequency.capitalized
+        }
+    }
 }
 
 public struct UpcomingBill: Identifiable, Codable, Hashable {

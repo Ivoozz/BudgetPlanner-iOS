@@ -5,8 +5,13 @@ public struct SettingsView: View {
     @ObservedObject var store = BudgetStore.shared
 
     @State private var biometricsToggle: Bool = false
+    @State private var showingChangePasswordSheet: Bool = false
     @State private var showingLogoutAlert: Bool = false
+    @State private var showingResetAlert: Bool = false
+    @State private var showingDemoAlert: Bool = false
     @State private var showingCopiedAlert: Bool = false
+    @State private var systemFeedbackMessage: String? = nil
+    @State private var showingFeedbackAlert: Bool = false
 
     public init() {}
 
@@ -20,28 +25,50 @@ public struct SettingsView: View {
                 LiquidBackground()
 
                 ScrollView {
-                    VStack(spacing: 22) {
+                    VStack(spacing: 20) {
+                        // Profile Header
                         profileHeaderView
-                        syncSectionView
+
+                        // Management Hub Links
+                        managementHubSection
+
+                        // Security & Biometrics
                         securitySectionView
+
+                        // Data Tools & System
+                        systemDataToolsSection
+
+                        // SideStore Community Source
                         sideStoreSectionView
+
+                        // Logout Button
                         logoutButtonView
+
+                        // Credits
                         creditsFooterView
 
-                        Spacer(minLength: 30)
+                        Spacer(minLength: 40)
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 10)
                 }
             }
-            .navigationTitle("Instellingen")
+            .navigationTitle("Beheer & Meer")
             .onAppear {
                 biometricsToggle = auth.isBiometricsEnabled
+            }
+            .sheet(isPresented: $showingChangePasswordSheet) {
+                ChangePasswordSheet()
             }
             .alert("Klaar!", isPresented: $showingCopiedAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("SideStore Community Source URL is gekopieerd naar je klembord!")
+            }
+            .alert("Systeem Melding", isPresented: $showingFeedbackAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(systemFeedbackMessage ?? "")
             }
             .alert("Uitloggen?", isPresented: $showingLogoutAlert) {
                 Button("Annuleren", role: .cancel) {}
@@ -51,12 +78,46 @@ public struct SettingsView: View {
             } message: {
                 Text("Weet je zeker dat je wilt uitloggen van \(auth.serverURL)?")
             }
+            .alert("Voorbeelddata Inladen?", isPresented: $showingDemoAlert) {
+                Button("Annuleren", role: .cancel) {}
+                Button("Inladen", role: .none) {
+                    Task {
+                        do {
+                            let msg = try await store.seedDemoData()
+                            systemFeedbackMessage = msg
+                            showingFeedbackAlert = true
+                        } catch {
+                            systemFeedbackMessage = error.localizedDescription
+                            showingFeedbackAlert = true
+                        }
+                    }
+                }
+            } message: {
+                Text("Dit voegt voorbeeld transacties en rekeningen toe.")
+            }
+            .alert("WAARSCHUWING: Database Schonen?", isPresented: $showingResetAlert) {
+                Button("Annuleren", role: .cancel) {}
+                Button("Alles Wissen", role: .destructive) {
+                    Task {
+                        do {
+                            let msg = try await store.resetDatabase()
+                            systemFeedbackMessage = msg
+                            showingFeedbackAlert = true
+                        } catch {
+                            systemFeedbackMessage = error.localizedDescription
+                            showingFeedbackAlert = true
+                        }
+                    }
+                }
+            } message: {
+                Text("Dit wist alle transacties, budgetten en vaste posten permanent!")
+            }
         }
     }
 
     // MARK: - Subviews
     private var profileHeaderView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             ZStack {
                 Circle()
                     .fill(
@@ -66,14 +127,14 @@ public struct SettingsView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 72, height: 72)
+                    .frame(width: 64, height: 64)
                 Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 64))
+                    .font(.system(size: 58))
                     .foregroundColor(.white)
             }
 
             Text(auth.currentUser ?? "Gebruiker")
-                .font(.system(size: 20, weight: .bold))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundColor(.white)
 
             HStack(spacing: 6) {
@@ -85,96 +146,157 @@ public struct SettingsView: View {
                     .foregroundColor(.gray)
             }
         }
-        .padding(20)
+        .padding(18)
         .frame(maxWidth: .infinity)
-        .liquidGlass(cornerRadius: 22)
+        .liquidGlass(cornerRadius: 20)
     }
 
-    private var syncSectionView: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("SYNCHRONISATIE")
+    private var managementHubSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("BEHEER & ANALYSE")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundColor(.gray)
                 .tracking(1.1)
 
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Status")
-                        .foregroundColor(.gray)
-                    Spacer()
-                    Text("Verbonden met Cloud")
-                        .fontWeight(.semibold)
-                        .foregroundColor(.appEmerald)
+            VStack(spacing: 8) {
+                NavigationLink(destination: ReportsView()) {
+                    hubRow(title: "Financiële Jaaranalyse", subtitle: "12-Maanden matrix & rapportages", icon: "chart.line.uptrend.xyaxis", color: .appEmerald)
                 }
 
-                if let lastSync = store.lastSyncDate {
-                    HStack {
-                        Text("Laatste sync")
-                            .foregroundColor(.gray)
-                        Spacer()
-                        Text(lastSync, style: .time)
-                            .foregroundColor(.white)
-                    }
+                NavigationLink(destination: AccountsView()) {
+                    hubRow(title: "Rekeningen & Saldo", subtitle: "Beheer bank- en spaarrekeningen", icon: "creditcard.fill", color: .appSapphire)
                 }
 
-                Divider().background(Color.white.opacity(0.1))
-
-                Button(action: {
-                    Task {
-                        HapticManager.impact(.medium)
-                        await store.refreshAll()
-                    }
-                }) {
-                    HStack {
-                        Image(systemName: "arrow.clockwise")
-                        Text("Nu Handmatig Synchroniseren")
-                    }
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.appSapphire)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                NavigationLink(destination: CategoryManagementView()) {
+                    hubRow(title: "Categorieën Beheren", subtitle: "Kleuren, iconen en categorietypes", icon: "tag.fill", color: .appAmber)
                 }
             }
-            .padding(16)
-            .liquidGlass(cornerRadius: 18)
         }
     }
 
+    private func hubRow(title: String, subtitle: String, icon: String, color: Color) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.18))
+                    .frame(width: 38, height: 38)
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(color)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundColor(.gray)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.gray)
+        }
+        .padding(12)
+        .liquidGlass(cornerRadius: 16)
+    }
+
     private var securitySectionView: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("BEVEILIGING")
+        VStack(alignment: .leading, spacing: 10) {
+            Text("BEVEILIGING & TOEGANG")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundColor(.gray)
                 .tracking(1.1)
 
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 Toggle(isOn: $biometricsToggle) {
                     HStack(spacing: 10) {
                         Image(systemName: "faceid")
                             .font(.system(size: 18))
                             .foregroundColor(.appEmerald)
                         Text("Face ID Vergrendeling")
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.white)
                     }
                 }
                 .onChange(of: biometricsToggle) { val in
                     auth.setBiometricsEnabled(val)
                 }
+
+                Divider().background(Color.white.opacity(0.08))
+
+                Button(action: {
+                    showingChangePasswordSheet = true
+                }) {
+                    HStack {
+                        Image(systemName: "lock.rotation")
+                            .foregroundColor(.appSapphire)
+                        Text("Wachtwoord Wijzigen")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.white)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11))
+                            .foregroundColor(.gray)
+                    }
+                }
             }
-            .padding(16)
-            .liquidGlass(cornerRadius: 18)
+            .padding(14)
+            .liquidGlass(cornerRadius: 16)
+        }
+    }
+
+    private var systemDataToolsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("DATA & SYSTEEM")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(.gray)
+                .tracking(1.1)
+
+            VStack(spacing: 8) {
+                // Seed Demo
+                Button(action: { showingDemoAlert = true }) {
+                    HStack {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.appAmber)
+                        Text("Voorbeelddata Inladen")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.white)
+                        Spacer()
+                    }
+                    .padding(12)
+                    .liquidGlass(cornerRadius: 14)
+                }
+
+                // Reset
+                Button(action: { showingResetAlert = true }) {
+                    HStack {
+                        Image(systemName: "trash.fill")
+                            .foregroundColor(.appRose)
+                        Text("Alle Data Schonen & Reset")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.appRose)
+                        Spacer()
+                    }
+                    .padding(12)
+                    .liquidGlass(cornerRadius: 14, strokeColor: Color.appRose.opacity(0.3))
+                }
+            }
         }
     }
 
     private var sideStoreSectionView: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("SIDESTORE COMMUNITY SOURCE")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundColor(.gray)
                 .tracking(1.1)
 
             VStack(alignment: .leading, spacing: 12) {
-                Text("Installeer en update BudgetPlanner draadloos direct op je iPhone via SideStore.")
+                Text("Installeer en update Budget draadloos op je iPhone via SideStore.")
                     .font(.caption)
                     .foregroundColor(.gray)
 
@@ -207,17 +329,17 @@ public struct SettingsView: View {
                             Text("1-Tik Toevoegen in SideStore")
                                 .fontWeight(.bold)
                         }
-                        .font(.system(size: 14))
+                        .font(.system(size: 13))
                         .foregroundColor(.black)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, 11)
                         .background(Color.appEmerald)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                 }
             }
-            .padding(16)
-            .liquidGlass(cornerRadius: 18)
+            .padding(14)
+            .liquidGlass(cornerRadius: 16)
         }
     }
 
@@ -227,23 +349,23 @@ public struct SettingsView: View {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
                 Text("Uitloggen")
             }
-            .font(.system(size: 15, weight: .semibold))
+            .font(.system(size: 14, weight: .semibold))
             .foregroundColor(.appRose)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .liquidGlass(cornerRadius: 16, strokeColor: Color.appRose.opacity(0.4))
+            .padding(.vertical, 12)
+            .liquidGlass(cornerRadius: 14, strokeColor: Color.appRose.opacity(0.4))
         }
     }
 
     private var creditsFooterView: some View {
         VStack(spacing: 4) {
-            Text("BudgetPlanner voor iOS • v1.0.0")
+            Text("Budget voor iOS • v1.1.0 Liquid Glass Edition")
                 .font(.caption2)
                 .foregroundColor(.gray)
             Text("Ontwikkeld met meedogenloze precisie door Kapitein Syntax ⚓️")
                 .font(.caption2)
                 .foregroundColor(.gray.opacity(0.7))
         }
-        .padding(.top, 10)
+        .padding(.top, 6)
     }
 }

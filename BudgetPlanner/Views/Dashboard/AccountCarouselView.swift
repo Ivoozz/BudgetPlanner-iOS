@@ -43,6 +43,7 @@ public struct AccountCarouselView: View {
 
 public struct AccountCard: View {
     public let account: Account
+    @ObservedObject var store = BudgetStore.shared
 
     private var themeColor: Color {
         Color(hex: account.color)
@@ -81,8 +82,8 @@ public struct AccountCard: View {
                     .foregroundColor(.gray)
                     .lineLimit(1)
 
-                Text(CurrencyFormatter.format(account.balance))
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                Text(CurrencyFormatter.format(account.balance, privacy: store.privacyMode))
+                    .font(.system(size: 19, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
             }
         }

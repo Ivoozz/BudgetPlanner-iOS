@@ -16,7 +16,7 @@ public struct MainTabView: View {
                 TabView(selection: $selectedTab) {
                     DashboardView()
                         .tabItem {
-                            Label("Dashboard", systemImage: "gauge.with.needle")
+                            Label("Dashboard", systemImage: "gauge.with.needle.fill")
                         }
                         .tag(0)
 
@@ -26,21 +26,21 @@ public struct MainTabView: View {
                         }
                         .tag(1)
 
-                    BudgetsView()
+                    RecurringView()
                         .tabItem {
-                            Label("Budgetten", systemImage: "chart.bar.xaxis")
+                            Label("Vaste Posten", systemImage: "repeat.circle.fill")
                         }
                         .tag(2)
 
-                    SavingsView()
+                    BudgetAndSavingsView()
                         .tabItem {
-                            Label("Sparen", systemImage: "target")
+                            Label("Budget & Sparen", systemImage: "target")
                         }
                         .tag(3)
 
                     SettingsView()
                         .tabItem {
-                            Label("Instellingen", systemImage: "gearshape.fill")
+                            Label("Beheer", systemImage: "slider.horizontal.3")
                         }
                         .tag(4)
                 }

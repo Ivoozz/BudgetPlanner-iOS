@@ -4,22 +4,11 @@ public struct DashboardView: View {
     @ObservedObject var store = BudgetStore.shared
     @ObservedObject var auth = AuthManager.shared
 
-    @State private var showingAddTransaction = false
-    @State private var showingTransfer = false
+    @State private var showingAddTransaction: Bool = false
+    @State private var showingTransfer: Bool = false
     @State private var selectedTxType: TransactionType = .variableExpense
 
     public init() {}
-
-    private var monthName: String {
-        let df = DateFormatter()
-        df.locale = Locale(identifier: "nl_NL")
-        let symbols = df.monthSymbols ?? []
-        let idx = store.selectedMonth - 1
-        if idx >= 0 && idx < symbols.count {
-            return "\(symbols[idx].capitalized) \(store.selectedYear)"
-        }
-        return "\(store.selectedMonth)-\(store.selectedYear)"
-    }
 
     public var body: some View {
         NavigationStack {
@@ -27,9 +16,9 @@ public struct DashboardView: View {
                 LiquidBackground()
 
                 ScrollView {
-                    VStack(spacing: 22) {
-                        // 1. Month Selector Bar
-                        monthSelectorBar
+                    VStack(spacing: 20) {
+                        // 1. Month & Privacy Bar
+                        MonthNavigationBar()
 
                         // 2. Hero Month Summary Card
                         HeroBalanceCard(summary: store.monthSummary)
@@ -38,17 +27,14 @@ public struct DashboardView: View {
                         quickActionGrid
 
                         // 4. Daily Spending Allowance
-                        DailyBudgetCard(
-                            dailyAmount: store.monthSummary.dailyBudgetRemaining,
-                            daysLeft: store.monthSummary.daysLeftInMonth
-                        )
+                        DailyBudgetCard(summary: store.monthSummary)
 
                         // 5. Account Balances Carousel
                         if !store.accounts.isEmpty {
                             AccountCarouselView(accounts: store.accounts)
                         }
 
-                        // 6. Budget Alerts / Top Categories
+                        // 6. Top Categories & Budget Meters
                         if !store.categoryBreakdown.isEmpty {
                             topCategoriesSection
                         }
@@ -111,20 +97,6 @@ public struct DashboardView: View {
                             .foregroundColor(.white)
                     }
                 }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: {
-                        Task { await store.refreshAll() }
-                    }) {
-                        if store.isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        } else {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .foregroundColor(.white)
-                        }
-                    }
-                }
             }
             .sheet(isPresented: $showingAddTransaction) {
                 AddTransactionSheet(defaultType: selectedTxType)
@@ -136,58 +108,8 @@ public struct DashboardView: View {
     }
 
     // MARK: - Subviews
-    private var monthSelectorBar: some View {
-        HStack {
-            Button(action: {
-                var m = store.selectedMonth - 1
-                var y = store.selectedYear
-                if m < 1 { m = 12; y -= 1 }
-                Task { await store.changeMonth(year: y, month: m) }
-            }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(8)
-                    .background(Color.white.opacity(0.08))
-                    .clipShape(Circle())
-            }
-
-            Spacer()
-
-            HStack(spacing: 6) {
-                Image(systemName: "calendar")
-                    .foregroundColor(.appSapphire)
-                    .font(.subheadline)
-
-                Text(monthName)
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-            }
-
-            Spacer()
-
-            Button(action: {
-                var m = store.selectedMonth + 1
-                var y = store.selectedYear
-                if m > 12 { m = 1; y += 1 }
-                Task { await store.changeMonth(year: y, month: m) }
-            }) {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(8)
-                    .background(Color.white.opacity(0.08))
-                    .clipShape(Circle())
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .liquidGlass(cornerRadius: 14)
-    }
-
     private var quickActionGrid: some View {
-        HStack(spacing: 12) {
-            // Uitgave toevoegen
+        HStack(spacing: 10) {
             Button(action: {
                 selectedTxType = .variableExpense
                 showingAddTransaction = true
@@ -195,7 +117,6 @@ public struct DashboardView: View {
                 quickActionButton(title: "Uitgave", icon: "minus.circle.fill", color: .appRose)
             }
 
-            // Inkomst toevoegen
             Button(action: {
                 selectedTxType = .income
                 showingAddTransaction = true
@@ -203,7 +124,6 @@ public struct DashboardView: View {
                 quickActionButton(title: "Inkomst", icon: "plus.circle.fill", color: .appEmerald)
             }
 
-            // Overboeken
             Button(action: {
                 showingTransfer = true
             }) {
@@ -213,17 +133,17 @@ public struct DashboardView: View {
     }
 
     private func quickActionButton(title: String, icon: String, color: Color) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .bold))
+                .font(.system(size: 15, weight: .bold))
                 .foregroundColor(color)
 
             Text(title)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.white)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
         .liquidGlass(cornerRadius: 14, strokeColor: color.opacity(0.3))
     }
 
@@ -237,8 +157,8 @@ public struct DashboardView: View {
 
                 Spacer()
 
-                NavigationLink(destination: BudgetsView()) {
-                    Text("Budgetten")
+                NavigationLink(destination: BudgetAndSavingsView()) {
+                    Text("Alle budgetten")
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.appSapphire)
@@ -246,7 +166,7 @@ public struct DashboardView: View {
             }
             .padding(.horizontal, 4)
 
-            VStack(spacing: 10) {
+            VStack(spacing: 8) {
                 ForEach(store.categoryBreakdown.prefix(4)) { item in
                     HStack(spacing: 12) {
                         CategoryIconView(icon: item.categoryIcon, colorHex: item.categoryColor, size: 36, iconSize: 16)
@@ -254,37 +174,36 @@ public struct DashboardView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             HStack {
                                 Text(item.categoryName)
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(.white)
 
                                 Spacer()
 
-                                Text(CurrencyFormatter.format(item.totalAmount))
-                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                Text(CurrencyFormatter.format(item.totalAmount, privacy: store.privacyMode))
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
                                     .foregroundColor(.white)
                             }
 
-                            // Progress bar
                             if let usedPct = item.budgetUsedPercentage {
                                 GeometryReader { geo in
                                     ZStack(alignment: .leading) {
                                         Capsule()
                                             .fill(Color.white.opacity(0.08))
-                                            .frame(height: 6)
+                                            .frame(height: 5)
 
                                         Capsule()
                                             .fill(
                                                 usedPct > 100 ? Color.appRose :
                                                 usedPct > 80 ? Color.appAmber : Color.appEmerald
                                             )
-                                            .frame(width: min(geo.size.width * CGFloat(usedPct / 100.0), geo.size.width), height: 6)
+                                            .frame(width: min(geo.size.width * CGFloat(usedPct / 100.0), geo.size.width), height: 5)
                                     }
                                 }
-                                .frame(height: 6)
+                                .frame(height: 5)
                             }
                         }
                     }
-                    .padding(12)
+                    .padding(10)
                     .liquidGlass(cornerRadius: 14)
                 }
             }
@@ -313,15 +232,15 @@ public struct DashboardView: View {
             if store.recentTransactions.isEmpty {
                 HStack {
                     Spacer()
-                    VStack(spacing: 8) {
+                    VStack(spacing: 6) {
                         Image(systemName: "tray.fill")
-                            .font(.system(size: 28))
+                            .font(.system(size: 24))
                             .foregroundColor(.gray)
-                        Text("Nog geen transacties voor deze maand")
+                        Text("Geen transacties voor deze maand")
                             .font(.footnote)
                             .foregroundColor(.gray)
                     }
-                    .padding(24)
+                    .padding(20)
                     Spacer()
                 }
                 .liquidGlass(cornerRadius: 16)

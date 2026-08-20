@@ -1,34 +1,37 @@
 import SwiftUI
 
 public struct DailyBudgetCard: View {
-    public let dailyAmount: Double
-    public let daysLeft: Int
+    public let summary: MonthSummary
+    @ObservedObject var store = BudgetStore.shared
+
+    public init(summary: MonthSummary) {
+        self.summary = summary
+    }
 
     public var body: some View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
                     .fill(Color.appSapphire.opacity(0.18))
-                    .frame(width: 46, height: 46)
-
-                Image(systemName: "calendar.badge.clock")
-                    .font(.system(size: 20, weight: .semibold))
+                    .frame(width: 48, height: 48)
+                Image(systemName: "gauge.with.needle")
+                    .font(.system(size: 22, weight: .semibold))
                     .foregroundColor(.appSapphire)
             }
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("DAGELIJKS BESTEEDBAAR")
+                Text("DAGELIJKS VRIJ BUDGET")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.gray)
                     .tracking(1.0)
 
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(CurrencyFormatter.format(dailyAmount))
+                    Text(CurrencyFormatter.format(summary.dailyBudgetRemaining, privacy: store.privacyMode))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(summary.dailyBudgetRemaining >= 0 ? .white : .appRose)
 
                     Text("/ dag")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.gray)
                 }
             }
@@ -36,19 +39,19 @@ public struct DailyBudgetCard: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(daysLeft) dagen")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.appSapphire)
-                Text("te gaan")
-                    .font(.system(size: 10, weight: .medium))
+                Text("\(summary.daysLeftInMonth)")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                Text("dagen resterend")
+                    .font(.system(size: 10))
                     .foregroundColor(.gray)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(Color.appSapphire.opacity(0.12))
-            .clipShape(Capsule())
+            .background(Color.white.opacity(0.06))
+            .cornerRadius(10)
         }
-        .padding(16)
-        .liquidGlass(cornerRadius: 18, strokeColor: Color.appSapphire.opacity(0.25))
+        .padding(18)
+        .liquidGlass(cornerRadius: 20, strokeColor: Color.appSapphire.opacity(0.3))
     }
 }

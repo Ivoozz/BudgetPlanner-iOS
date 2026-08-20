@@ -2,7 +2,12 @@ import SwiftUI
 
 public struct SavingsGoalCard: View {
     public let goal: SavingsGoal
-    public var onContribute: (() -> Void)? = nil
+    @ObservedObject var store = BudgetStore.shared
+    @State private var showingContributeSheet: Bool = false
+
+    public init(goal: SavingsGoal) {
+        self.goal = goal
+    }
 
     private var themeColor: Color {
         Color(hex: goal.color)
@@ -20,23 +25,23 @@ public struct SavingsGoalCard: View {
                     )
                     .frame(width: 52, height: 52)
 
-                    Text("\(String(format: "%.0f", goal.progress * 100))%")
+                    Text(store.privacyMode ? "••%" : "\(String(format: "%.0f", goal.progress * 100))%")
                         .font(.system(size: 11, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(goal.name)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.white)
 
                     HStack(spacing: 4) {
-                        Text(CurrencyFormatter.format(goal.currentAmount))
+                        Text(CurrencyFormatter.format(goal.currentAmount, privacy: store.privacyMode))
                             .font(.system(size: 13, weight: .bold, design: .rounded))
                             .foregroundColor(themeColor)
 
-                        Text("van \(CurrencyFormatter.format(goal.targetAmount))")
-                            .font(.system(size: 12))
+                        Text("van \(CurrencyFormatter.format(goal.targetAmount, privacy: store.privacyMode))")
+                            .font(.system(size: 11))
                             .foregroundColor(.gray)
                     }
 
@@ -51,7 +56,7 @@ public struct SavingsGoalCard: View {
 
                 // Contribute button
                 Button(action: {
-                    onContribute?()
+                    showingContributeSheet = true
                     HapticManager.impact(.medium)
                 }) {
                     Text("Bijstorten")
@@ -66,5 +71,8 @@ public struct SavingsGoalCard: View {
         }
         .padding(16)
         .liquidGlass(cornerRadius: 18, strokeColor: themeColor.opacity(0.3))
+        .sheet(isPresented: $showingContributeSheet) {
+            ContributeSavingsSheet(goal: goal)
+        }
     }
 }

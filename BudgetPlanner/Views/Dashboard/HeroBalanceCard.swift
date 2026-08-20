@@ -2,19 +2,24 @@ import SwiftUI
 
 public struct HeroBalanceCard: View {
     public let summary: MonthSummary
+    @ObservedObject var store = BudgetStore.shared
+
+    public init(summary: MonthSummary) {
+        self.summary = summary
+    }
 
     public var body: some View {
         VStack(spacing: 16) {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("NETTO RESULTAAT DIT MAAND")
+                    Text("NETTO RESULTAAT")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundColor(.gray)
                         .tracking(1.2)
 
-                    Text(CurrencyFormatter.format(summary.netSavings))
-                        .font(.system(size: 34, weight: .heavy, design: .rounded))
+                    Text(CurrencyFormatter.format(summary.netSavings, privacy: store.privacyMode))
+                        .font(.system(size: 32, weight: .heavy, design: .rounded))
                         .foregroundColor(summary.netSavings >= 0 ? .appEmerald : .appRose)
                 }
 
@@ -22,8 +27,8 @@ public struct HeroBalanceCard: View {
 
                 // Savings Rate Badge
                 VStack(spacing: 2) {
-                    Text("\(String(format: "%.1f", summary.savingsRate))%")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                    Text(store.privacyMode ? "••%" : "\(String(format: "%.1f", summary.savingsRate))%")
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundColor(.appEmerald)
                     Text("Spaarquote")
                         .font(.system(size: 10, weight: .medium))
@@ -42,49 +47,47 @@ public struct HeroBalanceCard: View {
             Divider()
                 .background(Color.white.opacity(0.1))
 
-            // 2-Column: Income vs Total Expenses
-            HStack(spacing: 16) {
+            // 3-Column Breakdown: Inkomsten, Vaste Lasten, Variabel/Overig
+            HStack(spacing: 8) {
                 // Inkomsten
-                HStack(spacing: 10) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.appEmerald.opacity(0.2))
-                            .frame(width: 36, height: 36)
-                        Image(systemName: "arrow.down.left")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.appEmerald)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.appEmerald).frame(width: 6, height: 6)
                         Text("Inkomsten")
-                            .font(.caption2)
+                            .font(.system(size: 10, weight: .semibold))
                             .foregroundColor(.gray)
-                        Text(CurrencyFormatter.format(summary.totalIncome))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
                     }
+                    Text(CurrencyFormatter.formatCompact(summary.totalIncome, privacy: store.privacyMode))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Uitgaven
-                HStack(spacing: 10) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.appRose.opacity(0.2))
-                            .frame(width: 36, height: 36)
-                        Image(systemName: "arrow.up.right")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.appRose)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Uitgaven")
-                            .font(.caption2)
+                // Vaste Lasten
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.appSapphire).frame(width: 6, height: 6)
+                        Text("Vast")
+                            .font(.system(size: 10, weight: .semibold))
                             .foregroundColor(.gray)
-                        Text(CurrencyFormatter.format(summary.totalExpenses))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
                     }
+                    Text(CurrencyFormatter.formatCompact(summary.totalFixedExpenses, privacy: store.privacyMode))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Variabel + Eenmalig
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.appAmber).frame(width: 6, height: 6)
+                        Text("Variabel")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.gray)
+                    }
+                    Text(CurrencyFormatter.formatCompact(summary.totalVariableExpenses + summary.totalOneTimeExpenses, privacy: store.privacyMode))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }

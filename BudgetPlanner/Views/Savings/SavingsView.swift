@@ -2,7 +2,7 @@ import SwiftUI
 
 public struct SavingsView: View {
     @ObservedObject var store = BudgetStore.shared
-    @State private var showingAddGoalSheet = false
+    @State private var showingAddGoalSheet: Bool = false
     @State private var selectedGoalForContribute: SavingsGoal? = nil
 
     public init() {}
@@ -21,17 +21,20 @@ public struct SavingsView: View {
                 LiquidBackground()
 
                 ScrollView {
-                    VStack(spacing: 22) {
+                    VStack(spacing: 20) {
+                        // Month & Privacy Bar
+                        MonthNavigationBar()
+
                         // Total Savings Hero Card
                         VStack(spacing: 14) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("TOTAAL GESPAARD IN DOELEN")
-                                        .font(.system(size: 11, weight: .bold))
+                                        .font(.system(size: 10, weight: .bold))
                                         .foregroundColor(.gray)
 
-                                    Text(CurrencyFormatter.format(totalSaved))
-                                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                                    Text(CurrencyFormatter.format(totalSaved, privacy: store.privacyMode))
+                                        .font(.system(size: 26, weight: .heavy, design: .rounded))
                                         .foregroundColor(.appEmerald)
                                 }
 
@@ -39,11 +42,11 @@ public struct SavingsView: View {
 
                                 VStack(alignment: .trailing, spacing: 4) {
                                     Text("DOELBEDRAG")
-                                        .font(.system(size: 11, weight: .bold))
+                                        .font(.system(size: 10, weight: .bold))
                                         .foregroundColor(.gray)
 
-                                    Text(CurrencyFormatter.format(totalTarget))
-                                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                                    Text(CurrencyFormatter.format(totalTarget, privacy: store.privacyMode))
+                                        .font(.system(size: 17, weight: .bold, design: .rounded))
                                         .foregroundColor(.white)
                                 }
                             }
@@ -89,11 +92,9 @@ public struct SavingsView: View {
                                 }
                                 .liquidGlass(cornerRadius: 16)
                             } else {
-                                VStack(spacing: 12) {
+                                LazyVStack(spacing: 12) {
                                     ForEach(store.savingsGoals) { goal in
-                                        SavingsGoalCard(goal: goal) {
-                                            selectedGoalForContribute = goal
-                                        }
+                                        SavingsGoalCard(goal: goal)
                                     }
                                 }
                             }

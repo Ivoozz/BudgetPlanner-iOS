@@ -4,11 +4,15 @@ public struct TransactionDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var store = BudgetStore.shared
     public let transaction: Transaction
-    @State private var showingDeleteConfirm = false
-    @State private var isDeleting = false
+    @State private var showingDeleteConfirm: Bool = false
+    @State private var isDeleting: Bool = false
+
+    public init(transaction: Transaction) {
+        self.transaction = transaction
+    }
 
     private var isIncome: Bool {
-        transaction.type == .income
+        transaction.type == .income || transaction.type == .oneTimeIncome
     }
 
     public var body: some View {
@@ -27,7 +31,7 @@ public struct TransactionDetailView: View {
                                 iconSize: 28
                             )
 
-                            Text(CurrencyFormatter.formatSigned(transaction.amount, isIncome: isIncome))
+                            Text(CurrencyFormatter.formatSigned(transaction.amount, isIncome: isIncome, privacy: store.privacyMode))
                                 .font(.system(size: 32, weight: .heavy, design: .rounded))
                                 .foregroundColor(isIncome ? .appEmerald : .white)
 
@@ -93,7 +97,7 @@ public struct TransactionDetailView: View {
                     }
                 }
             } message: {
-                Text("Weet je zeker dat je deze transactie van € \(String(format: "%.2f", transaction.amount)) wilt verwijderen? Dit wordt direct gesynchroniseerd met budget.ivoozz.nl.")
+                Text("Weet je zeker dat je deze transactie wilt verwijderen? Dit wordt direct gesynchroniseerd met budget.ivoozz.nl.")
             }
         }
     }
