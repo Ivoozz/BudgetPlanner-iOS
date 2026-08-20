@@ -18,7 +18,7 @@
       "localizedDescription": "De officiële native iPhone app voor budget.ivoozz.nl. Volledige realtime synchronisatie van al je transacties, rekeningen, vaste lasten, budgetten en spaardoelen met biometrische Face ID beveiliging, Privacy Modus, Jaaranalyse matrix en het Apple Liquid Glass design system.",
       "iconURL": "https://raw.githubusercontent.com/Ivoozz/BudgetPlanner-iOS/main/icon.png",
       "tintColor": "10B981",
-      "size": 3650000,
+      "size": 5422896,
       "screenshotURLs": [],
       "versions": [
         {
@@ -26,7 +26,7 @@
           "date": "2026-08-20",
           "localizedDescription": "Grote update v1.1.0: Privacy Modus (1-tik bedragen maskeren), Volledig Vaste Lasten & Periodiek Inkomen overzicht met maandboeking, 12-Maanden Jaaranalyse matrix, Categorieënbeheer, en kristalheldere Liquid Glass navigatie.",
           "downloadURL": "https://github.com/Ivoozz/BudgetPlanner-iOS/releases/download/v1.1.0/BudgetPlanner.ipa",
-          "size": 3650000
+          "size": 5422896
         },
         {
           "version": "1.0.0",
