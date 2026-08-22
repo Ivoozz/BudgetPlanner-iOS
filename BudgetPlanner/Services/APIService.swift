@@ -459,4 +459,186 @@ public class APIService {
         let res: [String: String] = try await execute(req)
         return res["message"] ?? "Database geschoond."
     }
+
+    // MARK: - CSV Import
+    public func importCSV(fileData: Data, fileName: String, accountId: Int? = nil, apply: Bool = true) async throws -> CSVImportResponse {
+        guard let url = URL(string: baseURL + "/api/import/csv") else {
+            throw APIError.invalidURL
+        }
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        if let token = token, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: text/csv\r\n\r\n".data(using: .utf8)!)
+        body.append(fileData)
+        body.append("\r\n".data(using: .utf8)!)
+
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"apply\"\r\n\r\n".data(using: .utf8)!)
+        body.append((apply ? "true" : "false").data(using: .utf8)!)
+        body.append("\r\n".data(using: .utf8)!)
+
+        if let accId = accountId {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"account_id\"\r\n\r\n".data(using: .utf8)!)
+            body.append("\(accId)".data(using: .utf8)!)
+            body.append("\r\n".data(using: .utf8)!)
+        }
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        return try await execute(request)
+    }
+
+    // MARK: - Open Banking / PSD2
+    public func getBankingInstitutions() async throws -> [BankInstitution] {
+        let req = try createRequest(path: "/api/banking/institutions")
+        return try await execute(req)
+    }
+
+    public func getBankingConnections() async throws -> [BankConnectionOut] {
+        let req = try createRequest(path: "/api/banking/connections")
+        return try await execute(req)
+    }
+
+    public func connectBank(institutionId: String, accountId: Int? = nil) async throws -> BankConnectResponse {
+        var payload: [String: Any] = ["institution_id": institutionId]
+        if let accId = accountId {
+            payload["account_id"] = accId
+        }
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        let req = try createRequest(path: "/api/banking/connect", method: "POST", body: body)
+        return try await execute(req)
+    }
+
+    public func syncBank(connectionId: Int) async throws -> BankSyncResponse {
+        let req = try createRequest(path: "/api/banking/sync/\(connectionId)", method: "POST")
+        return try await execute(req)
+    }
+
+    public func deleteBankConnection(connectionId: Int) async throws {
+        let req = try createRequest(path: "/api/banking/connections/\(connectionId)", method: "DELETE")
+        let _: [String: String] = try await execute(req)
+    }
+
+    // MARK: - Alerts & Notifications
+    public func getAlertsStatus() async throws -> AlertStatusResponse {
+        let req = try createRequest(path: "/api/alerts/status")
+        return try await execute(req)
+    }
+
+    public func triggerTestAlert() async throws -> TestAlertResponse {
+        let req = try createRequest(path: "/api/alerts/test", method: "POST")
+        return try await execute(req)
+    }
+
+    public func triggerAlertCheck() async throws -> [String: Any] {
+        let req = try createRequest(path: "/api/alerts/check", method: "POST")
+        let (data, _): (Data, URLResponse) = try await session.data(for: req)
+        return (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+    }
 }
+
+public struct CSVImportResponse: Codable {
+    public let status: String
+    public let count: Int
+    public let applied: Bool
+}
+
+public struct BankInstitution: Identifiable, Codable, Hashable {
+    public let id: String
+    public let name: String
+    public let bic: String?
+    public let logo: String?
+    public let group: String?
+}
+
+public struct BankConnectionOut: Identifiable, Codable {
+    public let id: Int
+    public let institutionId: String
+    public let institutionName: String
+    public let status: String
+    public let linkedAccountId: Int?
+    public let linkedAccountName: String?
+    public let lastSyncedAt: String?
+    public let expiresAt: String?
+    public let createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, status
+        case institutionId = "institution_id"
+        case institutionName = "institution_name"
+        case linkedAccountId = "linked_account_id"
+        case linkedAccountName = "linked_account_name"
+        case lastSyncedAt = "last_synced_at"
+        case expiresAt = "expires_at"
+        case createdAt = "created_at"
+    }
+}
+
+public struct BankConnectResponse: Codable {
+    public let status: String
+    public let authLink: String?
+    public let connectionId: Int?
+    public let message: String?
+
+    enum CodingKeys: String, CodingKey {
+        case status, message
+        case authLink = "auth_link"
+        case connectionId = "connection_id"
+    }
+}
+
+public struct BankSyncResponse: Codable {
+    public let status: String
+    public let syncedTransactions: Int?
+    public let lastSyncedAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case syncedTransactions = "synced_transactions"
+        case lastSyncedAt = "last_synced_at"
+    }
+}
+
+public struct AlertStatusResponse: Codable {
+    public let enabled: Bool
+    public let ntfyUrl: String
+    public let recentAlerts: [AlertLogItem]
+
+    enum CodingKeys: String, CodingKey {
+        case enabled
+        case ntfyUrl = "ntfy_url"
+        case recentAlerts = "recent_alerts"
+    }
+}
+
+public struct AlertLogItem: Identifiable, Codable {
+    public let id: Int
+    public let type: String
+    public let categoryId: Int?
+    public let period: String
+    public let threshold: Double
+    public let message: String
+    public let sentAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, type, period, threshold, message
+        case categoryId = "category_id"
+        case sentAt = "sent_at"
+    }
+}
+
+public struct TestAlertResponse: Codable {
+    public let status: String
+    public let dispatched: Bool
+}
+

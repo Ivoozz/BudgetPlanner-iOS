@@ -12,6 +12,7 @@ public struct SettingsView: View {
     @State private var showingCopiedAlert: Bool = false
     @State private var systemFeedbackMessage: String? = nil
     @State private var showingFeedbackAlert: Bool = false
+    @State private var showingImportCsv: Bool = false
 
     public init() {}
 
@@ -59,6 +60,9 @@ public struct SettingsView: View {
             }
             .sheet(isPresented: $showingChangePasswordSheet) {
                 ChangePasswordSheet()
+            }
+            .sheet(isPresented: $showingImportCsv) {
+                ImportCsvSheet()
             }
             .alert("Klaar!", isPresented: $showingCopiedAlert) {
                 Button("OK", role: .cancel) {}
@@ -153,7 +157,7 @@ public struct SettingsView: View {
 
     private var managementHubSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("BEHEER & ANALYSE")
+            Text("BEHEER & KOPPELINGEN")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundColor(.gray)
                 .tracking(1.1)
@@ -161,6 +165,19 @@ public struct SettingsView: View {
             VStack(spacing: 8) {
                 NavigationLink(destination: ReportsView()) {
                     hubRow(title: "Financiële Jaaranalyse", subtitle: "12-Maanden matrix & rapportages", icon: "chart.line.uptrend.xyaxis", color: .appEmerald)
+                }
+
+                Button(action: { showingImportCsv = true }) {
+                    hubRow(title: "Bank CSV Importeren", subtitle: "ASN Bank, RegioBank, SNS, ING & Rabo", icon: "square.and.arrow.down.fill", color: .appEmerald)
+                }
+                .buttonStyle(PlainButtonStyle())
+
+                NavigationLink(destination: BankConnectionsView()) {
+                    hubRow(title: "Open Banking Koppelingen", subtitle: "Automatische sync ASN Bank & RegioBank", icon: "building.columns.fill", color: .appSapphire)
+                }
+
+                NavigationLink(destination: BudgetAlertsView()) {
+                    hubRow(title: "Budget Notificaties & Alerts", subtitle: "ntfy pushmeldingen bij overschrijding", icon: "bell.badge.fill", color: .appRose)
                 }
 
                 NavigationLink(destination: AccountsView()) {

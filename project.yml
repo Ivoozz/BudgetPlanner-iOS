@@ -25,8 +25,8 @@ targets:
       path: BudgetPlanner/Info.plist
       properties:
         CFBundleDisplayName: "Budget"
-        CFBundleShortVersionString: "1.1.0"
-        CFBundleVersion: "2"
+        CFBundleShortVersionString: "1.2.0"
+        CFBundleVersion: "3"
         UILaunchScreen: {}
         UIRequiredDeviceCapabilities:
           - arm64

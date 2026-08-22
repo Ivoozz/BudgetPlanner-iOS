@@ -6,6 +6,7 @@ public struct DashboardView: View {
 
     @State private var showingAddTransaction: Bool = false
     @State private var showingTransfer: Bool = false
+    @State private var showingImportCsv: Bool = false
     @State private var selectedTxType: TransactionType = .variableExpense
 
     public init() {}
@@ -20,13 +21,13 @@ public struct DashboardView: View {
                         // 1. Month & Privacy Bar
                         MonthNavigationBar()
 
-                        // 2. Hero Month Summary Card
+                        // 2. Hero Month Summary & Cashflow Proportion
                         HeroBalanceCard(summary: store.monthSummary)
 
                         // 3. Quick Action Buttons
                         quickActionGrid
 
-                        // 4. Daily Spending Allowance
+                        // 4. Daily Spending Allowance & Velocity
                         DailyBudgetCard(summary: store.monthSummary)
 
                         // 5. Account Balances Carousel
@@ -97,6 +98,14 @@ public struct DashboardView: View {
                             .foregroundColor(.white)
                     }
                 }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(destination: BudgetAlertsView()) {
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 15))
+                            .foregroundColor(.appSapphire)
+                    }
+                }
             }
             .sheet(isPresented: $showingAddTransaction) {
                 AddTransactionSheet(defaultType: selectedTxType)
@@ -104,12 +113,15 @@ public struct DashboardView: View {
             .sheet(isPresented: $showingTransfer) {
                 TransferSheet()
             }
+            .sheet(isPresented: $showingImportCsv) {
+                ImportCsvSheet()
+            }
         }
     }
 
     // MARK: - Subviews
     private var quickActionGrid: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Button(action: {
                 selectedTxType = .variableExpense
                 showingAddTransaction = true
@@ -125,22 +137,29 @@ public struct DashboardView: View {
             }
 
             Button(action: {
+                showingImportCsv = true
+            }) {
+                quickActionButton(title: "Bank CSV", icon: "square.and.arrow.down.fill", color: .appAmber)
+            }
+
+            Button(action: {
                 showingTransfer = true
             }) {
-                quickActionButton(title: "Overboeken", icon: "arrow.left.arrow.right.circle.fill", color: .appSapphire)
+                quickActionButton(title: "Boeken", icon: "arrow.left.arrow.right", color: .appSapphire)
             }
         }
     }
 
     private func quickActionButton(title: String, icon: String, color: Color) -> some View {
-        HStack(spacing: 6) {
+        VStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.system(size: 15, weight: .bold))
+                .font(.system(size: 16, weight: .bold))
                 .foregroundColor(color)
 
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.white)
+                .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
@@ -193,8 +212,8 @@ public struct DashboardView: View {
 
                                         Capsule()
                                             .fill(
-                                                usedPct > 100 ? Color.appRose :
-                                                usedPct > 80 ? Color.appAmber : Color.appEmerald
+                                                usedPct >= 100 ? Color.appRose :
+                                                usedPct >= 85 ? Color.appAmber : Color.appEmerald
                                             )
                                             .frame(width: min(geo.size.width * CGFloat(usedPct / 100.0), geo.size.width), height: 5)
                                     }
